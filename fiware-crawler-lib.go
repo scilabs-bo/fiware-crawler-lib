@@ -115,10 +115,10 @@ func (c *Crawler) PublishMqtt(data map[string]interface{}) {
 	log.Info().Msg("Published data")
 }
 
-// NewServiceGroup creates a new ServiceGroup instance based on the configuration.
-// It returns a pointer to the newly created ServiceGroup.
-func (c *Crawler) NewServiceGroup() *i.ServiceGroup {
-	sg := &i.ServiceGroup{Apikey: c.Conf.ApiKey, Resource: c.Conf.Resource, EntityType: c.Conf.EntityType}
+// NewConfigGroup creates a new ConfigGroup instance based on the configuration.
+// It returns a pointer to the newly created ConfigGroup.
+func (c *Crawler) NewConfigGroup() *i.ConfigGroup {
+	sg := &i.ConfigGroup{Apikey: c.Conf.ApiKey, Resource: c.Conf.Resource, EntityType: c.Conf.EntityType}
 	return sg
 }
 
@@ -129,57 +129,16 @@ func (c *Crawler) NewDevice() *i.Device {
 	return d
 }
 
-// UpsertServiceGroup ensures the existence of a service group in the FIWARE IoT-Agent.
-// It takes a ServiceGroup sg as input and returns no values.
-func (c *Crawler) UpsertServiceGroup(sg i.ServiceGroup) {
-	ensureServiceGroupExists(c.Iota, c.Fs, sg)
+// UpsertConfigGroup ensures the existence of a service group in the FIWARE IoT-Agent.
+// It takes a ConfigGroup sg as input and returns no values.
+func (c *Crawler) UpsertConfigGroup(cg i.ConfigGroup) {
+	c.Iota.UpsertConfigGroup(c.Fs, cg)
 }
 
 // UpsertDevice ensures the existence of a device in the FIWARE IoT-Agent.
 // It takes a Device d as input and returns no values.
 func (c *Crawler) UpsertDevice(d i.Device) {
-	ensureDeviceExists(c.Iota, c.Fs, d)
-}
-
-func ensureServiceGroupExists(ia i.IoTA, fs i.FiwareService, sg i.ServiceGroup) {
-	exists := ia.ServiceGroupExists(fs, sg.Resource, sg.Apikey)
-	if !exists {
-		log.Debug().Msg("Creating service group...")
-		err := ia.CreateServiceGroup(fs, sg)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Could not create service group")
-		}
-	} else {
-		log.Debug().Msg("Update service group...")
-		err := ia.UpdateServiceGroup(fs, sg.Resource, sg.Apikey, sg)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Could not update service group")
-		}
-	}
-}
-
-func ensureDeviceExists(ia i.IoTA, fs i.FiwareService, d i.Device) {
-	exists := ia.DeviceExists(fs, d.Id)
-	if !exists {
-		log.Debug().Msg("Creating device...")
-		err := ia.CreateDevice(fs, d)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Could not create device")
-		}
-	} else {
-		log.Debug().Msg("Update device...")
-		dTmp, err := ia.ReadDevice(fs, d.Id)
-		if err != nil || dTmp.EntityName == "" {
-			log.Fatal().Err(err).Msg("Can not update device, no entity_name")
-		}
-
-		d.Transport = ""
-		d.EntityName = dTmp.EntityName
-		err = ia.UpdateDevice(fs, d)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Could not update device")
-		}
-	}
+	c.Iota.UpsertDevice(c.Fs, d)
 }
 
 func setLogLevel(ll string) {

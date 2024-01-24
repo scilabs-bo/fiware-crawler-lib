@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewServiceGroup(t *testing.T) {
-	sg := c.NewServiceGroup()
+	sg := c.NewConfigGroup()
 	if sg.EntityType != "testType" {
 		t.Fail()
 	}
@@ -36,10 +36,10 @@ func TestNewDevice(t *testing.T) {
 }
 
 func TestUpsertServiceGroup(t *testing.T) {
-	sg := c.NewServiceGroup()
+	sg := c.NewConfigGroup()
 	sg.DefaultEntityNameConjunction = ":"
-	c.UpsertServiceGroup(*sg)
-	c.UpsertServiceGroup(*sg)
+	c.UpsertConfigGroup(*sg)
+	c.UpsertConfigGroup(*sg)
 }
 
 func TestUpsertDevice(t *testing.T) {
@@ -54,15 +54,15 @@ func TestPublishMqtt(t *testing.T) {
 }
 
 func TestJob(t *testing.T) {
-  // This is just to stop the cron
-  go func() {
+	// This is just to stop the cron
+	go func() {
 		for {
-      time.Sleep(time.Second * 6 )
-      c.Cron.Stop()
+			time.Sleep(time.Second * 6)
+			c.Cron.Stop()
 		}
 	}()
 	c.Cron.LimitRunsTo(3)
-  c.Cron.StopBlockingChan()
+	c.Cron.StopBlockingChan()
 	c.StartJob(func() {
 		data := map[string]interface{}{"test": "test"}
 		c.PublishMqtt(data)
@@ -82,7 +82,7 @@ func setEnv() {
 	os.Setenv("CLIENT_ID", "testClientID")
 }
 func teardown() {
-	err := c.Iota.DeleteServiceGroup(c.Fs, c.Conf.Resource, c.Conf.ApiKey)
+	err := c.Iota.DeleteConfigGroup(c.Fs, c.Conf.Resource, c.Conf.ApiKey)
 	if err != nil {
 		log.Error().Err(err).Send()
 	}

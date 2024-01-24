@@ -32,13 +32,31 @@ func main() {
     // Create a new instance of the crawler
     crawler := fiwarecrawlerlib.New()
 
-    // Customize the crawler configuration if needed
+    // Example: Creating a new configuration group
+    configGroup := crawler.NewConfigGroup()
+
+    // Example: Creating a new device
+    device := crawler.NewDevice()
+
+    // Example: Upserting the configuration group and device
+    crawler.UpsertConfigGroup(*configGroup)
+    crawler.UpsertDevice(*device)
+    // Customize the Device and ConfigGroup configuration if needed
     // ...
 
     // Start the crawler job
     crawler.StartJob(func() {
         // Define your crawling logic here
         // ...
+
+        // Example: Crawling data and obtaining a map of attributes
+		data := map[string]interface{}{
+			"temperature": 25.5,
+			"humidity":    60,
+		}
+
+		// Publish the data to an MQTT broker
+		crawler.PublishMqtt(data)
     })
 }
 ```
