@@ -50,13 +50,13 @@ func main() {
         // ...
 
         // Example: Crawling data and obtaining a map of attributes
-		data := map[string]interface{}{
-			"temperature": 25.5,
-			"humidity":    60,
-		}
+        data := map[string]interface{}{
+            "temperature": 25.5,
+            "humidity":    60,
+        }
 
-		// Publish the data to an MQTT broker
-		crawler.PublishMqtt(data)
+        // Publish the data to an MQTT broker
+        crawler.PublishMqtt(data)
     })
 }
 ```
