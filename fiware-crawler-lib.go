@@ -1,3 +1,10 @@
+// Package fiwarecrawlerlib provides utility functions for regularly crawling data
+// and creating configuration groups and devices for a FIWARE IoT-Agent UL (Ultralight).
+//
+// The main functionalities include configuring a crawler with scheduling, handling
+// MQTT communication, and managing FIWARE service groups and devices. It is designed
+// to simplify the integration of IoT devices with FIWARE IoT Agents using Ultralight
+// protocol for data communication.
 package fiwarecrawlerlib
 
 import (
@@ -15,6 +22,8 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
+// Config represents the configuration parameters for the fiwarecrawlerlib package.
+// It is populated using environment variables.
 type Config struct {
 	Crontab string `env:"CRONTAB,required=true"`
 
@@ -39,15 +48,20 @@ type Config struct {
 	Password   string `env:"PASSWORD,required=false"`
 }
 
-type Crawler struct{
+// Crawler represents the main structure for the fiwarecrawlerlib package,
+// encapsulating the configuration, FIWARE IoT-Agent, FiwareService, and the cron scheduler.
+type Crawler struct {
 	Conf Config
 	Iota i.IoTA
 	Fs   i.FiwareService
 	Cron *gocron.Scheduler
 }
 
-func New()*Crawler {
-  c := &Crawler{}
+// New creates a new Crawler instance and initializes it with the configuration
+// parameters from environment variables.
+// Return a pointer to the Crawler instance
+func New() *Crawler {
+	c := &Crawler{}
 	_, err := env.UnmarshalFromEnviron(&c.Conf)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error while reading envs")
@@ -55,16 +69,19 @@ func New()*Crawler {
 	setLogLevel(c.Conf.LogLevel)
 	c.Iota = i.IoTA{Host: c.Conf.IotAHost, Port: c.Conf.IotAPort}
 	c.Fs = i.FiwareService{Service: c.Conf.Service, ServicePath: c.Conf.ServicePath}
-  c.Cron = gocron.NewScheduler(time.Local)
-  c.Cron = c.Cron.CronWithSeconds(c.Conf.Crontab)
-  return c
+	c.Cron = gocron.NewScheduler(time.Local)
+	c.Cron = c.Cron.CronWithSeconds(c.Conf.Crontab)
+	return c
 }
 
-func (c *Crawler) StartJob(jobFunc interface{}){
-  c.Cron.Do(jobFunc)
-  c.Cron.StartBlocking()
+// StartJob takes a function jobFunc, adds it to the cron scheduler and starts it blocking.
+func (c *Crawler) StartJob(jobFunc interface{}) {
+	c.Cron.Do(jobFunc)
+	c.Cron.StartBlocking()
 }
 
+// PublishMqtt publishes data to an MQTT broker based on the configuration parameters.
+// data items will be joind to a ul payload, nested struct will be parsed to json.
 func (c *Crawler) PublishMqtt(data map[string]interface{}) {
 	payloadArr := make([]string, 0)
 	for k, v := range data {
@@ -74,7 +91,7 @@ func (c *Crawler) PublishMqtt(data map[string]interface{}) {
 	log.Debug().Str("payload", payload).Msg("Publishing payload...")
 	options := mqtt.NewClientOptions().AddBroker("mqtt://" + c.Conf.MqttBroker + ":" + fmt.Sprint(c.Conf.MqttPort))
 	options.ClientID = c.Conf.ClientId
-  if c.Conf.Username != "" {
+	if c.Conf.Username != "" {
 		options.Username = c.Conf.Username
 	}
 	if c.Conf.Password != "" {
@@ -98,20 +115,28 @@ func (c *Crawler) PublishMqtt(data map[string]interface{}) {
 	log.Info().Msg("Published data")
 }
 
+// NewServiceGroup creates a new ServiceGroup instance based on the configuration.
+// It returns a pointer to the newly created ServiceGroup.
 func (c *Crawler) NewServiceGroup() *i.ServiceGroup {
 	sg := &i.ServiceGroup{Apikey: c.Conf.ApiKey, Resource: c.Conf.Resource, EntityType: c.Conf.EntityType}
 	return sg
 }
 
+// NewDevice creates a new Device instance based on the configuration.
+// It returns a pointer to the newly created Device.
 func (c *Crawler) NewDevice() *i.Device {
 	d := &i.Device{Id: c.Conf.DeviceId, Transport: "MQTT"}
 	return d
 }
 
+// UpsertServiceGroup ensures the existence of a service group in the FIWARE IoT-Agent.
+// It takes a ServiceGroup sg as input and returns no values.
 func (c *Crawler) UpsertServiceGroup(sg i.ServiceGroup) {
 	ensureServiceGroupExists(c.Iota, c.Fs, sg)
 }
 
+// UpsertDevice ensures the existence of a device in the FIWARE IoT-Agent.
+// It takes a Device d as input and returns no values.
 func (c *Crawler) UpsertDevice(d i.Device) {
 	ensureDeviceExists(c.Iota, c.Fs, d)
 }
@@ -134,7 +159,6 @@ func ensureServiceGroupExists(ia i.IoTA, fs i.FiwareService, sg i.ServiceGroup) 
 }
 
 func ensureDeviceExists(ia i.IoTA, fs i.FiwareService, d i.Device) {
-
 	exists := ia.DeviceExists(fs, d.Id)
 	if !exists {
 		log.Debug().Msg("Creating device...")
@@ -156,7 +180,6 @@ func ensureDeviceExists(ia i.IoTA, fs i.FiwareService, d i.Device) {
 			log.Fatal().Err(err).Msg("Could not update device")
 		}
 	}
-
 }
 
 func setLogLevel(ll string) {
