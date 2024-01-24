@@ -16,7 +16,7 @@ The **fiwarecrawlerlib** is a Go package that provides utility functions for reg
 To use this library in your Go project, you can install it with:
 
 ```bash
-go get -u github.com/yourusername/fiwarecrawlerlib
+go get -u github.com/scilabs-bo/fiware-crawler-lib
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ go get -u github.com/yourusername/fiwarecrawlerlib
 package main
 
 import (
-    "github.com/yourusername/fiwarecrawlerlib"
+    "github.com/scilabs-bo/fiware-crawler-lib"
 )
 
 func main() {
