@@ -36,7 +36,7 @@ type Config struct {
 	ApiKey   i.Apikey   `env:"API_KEY,required=true"`
 	Resource i.Resource `env:"RESOURCE,default=/iot/d"`
 
-	DeviceId   i.DeciveId `env:"DEVICE_ID, required=true"`
+	DeviceId   i.DeciveId `env:"DEVICE_ID, required=false"`
 	EntityType string     `env:"ENTITY_TYPE, required=true"`
 
 	LogLevel string `env:"LOG_LEVEL,default=DEBUG"`
@@ -104,7 +104,48 @@ func (c *Crawler) PublishMqtt(data map[string]interface{}) {
 		log.Error().Err(t.Error()).Msg("Error connecting")
 		return
 	}
+	if c.Conf.DeviceId == "" {
+		log.Error().Msg("For publishing without device id a device id has to be set")
+		return
+	}
 	topic := fmt.Sprintf("/ul/%v/%v/attrs", c.Conf.ApiKey, c.Conf.DeviceId)
+	log.Debug().Str("topic", topic).Msg("Publishing on topic")
+	t = client.Publish(topic, options.WillQos, false, payload)
+	_ = t.Wait()
+	if t.Error() != nil {
+		log.Error().Err(t.Error()).Msg("Error publishing message")
+	}
+	client.Disconnect(100)
+	log.Info().Msg("Published data")
+}
+
+func (c *Crawler) PublishMqttWithDeviceId(data map[string]interface{}, deviceId i.DeciveId) {
+	payloadArr := make([]string, 0)
+	for k, v := range data {
+		payloadArr = append(payloadArr, fmt.Sprintf("%v|%v", k, v))
+	}
+	payload := strings.Join(payloadArr, "|")
+	log.Debug().Str("payload", payload).Msg("Publishing payload...")
+	options := mqtt.NewClientOptions().AddBroker("mqtt://" + c.Conf.MqttBroker + ":" + fmt.Sprint(c.Conf.MqttPort))
+	options.ClientID = c.Conf.ClientId
+	if c.Conf.Username != "" {
+		options.Username = c.Conf.Username
+	}
+	if c.Conf.Password != "" {
+		options.Password = c.Conf.Password
+	}
+	client := mqtt.NewClient(options)
+	t := client.Connect()
+	_ = t.Wait()
+	if t.Error() != nil {
+		log.Error().Err(t.Error()).Msg("Error connecting")
+		return
+	}
+	if deviceId == "" {
+		log.Error().Msg("Device id can not be empty")
+		return
+	}
+	topic := fmt.Sprintf("/ul/%v/%v/attrs", c.Conf.ApiKey, deviceId)
 	log.Debug().Str("topic", topic).Msg("Publishing on topic")
 	t = client.Publish(topic, options.WillQos, false, payload)
 	_ = t.Wait()
