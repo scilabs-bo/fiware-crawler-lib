@@ -13,7 +13,7 @@ import (
 	"time"
 
 	env "github.com/Netflix/go-env"
-	i "github.com/fbuedding/iota-admin/pkg/iot-agent-sdk"
+	i "github.com/fbuedding/fiware-iot-agent-sdk"
 	"github.com/go-co-op/gocron"
 
 	"github.com/rs/zerolog"
@@ -166,7 +166,7 @@ func (c *Crawler) NewConfigGroup() *i.ConfigGroup {
 // NewDevice creates a new Device instance based on the configuration.
 // It returns a pointer to the newly created Device.
 func (c *Crawler) NewDevice() *i.Device {
-	d := &i.Device{Id: c.Conf.DeviceId, Transport: "MQTT"}
+	d := &i.Device{Id: c.Conf.DeviceId, Transport: "MQTT", ExplicitAttrs: ""}
 	return d
 }
 

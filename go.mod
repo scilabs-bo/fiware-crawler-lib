@@ -5,9 +5,9 @@ go 1.21.1
 require (
 	github.com/Netflix/go-env v0.0.0-20220526054621-78278af1949d
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/fbuedding/iota-admin v1.7.1
+	github.com/fbuedding/fiware-iot-agent-sdk v1.1.8
 	github.com/go-co-op/gocron v1.36.0
-	github.com/rs/zerolog v1.31.0
+	github.com/rs/zerolog v1.32.0
 )
 
 require (
